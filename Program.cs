@@ -11,7 +11,7 @@ namespace Temperature_Control
         static void Main(string[] args)
         {
             //DateTime date = new DateTime(2016,12,11);
-            TopChanceMold();
+            TopDifference();
         }
 
         void CreateDatabase()
@@ -203,11 +203,142 @@ namespace Temperature_Control
                     Console.WriteLine(day.Date + " " + day.MouldIndex + " " + day.AverageTemperature + " " + day.AverageMoisture);
                 }
             }
+        }
 
-            
+        static void TopDoorOpen()
+        {
+            using (var context = new EFContext())
+            {
+
+                //Create InsideList
+                var insideList = context.Inside
+                .AsEnumerable().GroupBy(x =>
+                {
+                    var stamp = x.Date;
+                    stamp = stamp.AddMinutes(-(stamp.Minute % 5));
+                    stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
+                    return stamp;
+                })
+                .Select(g => new { Date = g.Key, AvergeTemperature = g.Average(s => s.Temperature) })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+                //Create OutsideList
+                var outsideList = context.Outside
+                .AsEnumerable().GroupBy(x =>
+                {
+                    var stamp = x.Date;
+                    stamp = stamp.AddMinutes(-(stamp.Minute % 5));
+                    stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
+                    return stamp;
+                })
+                .Select(g => new { Date = g.Key, AvergeTemperature = g.Average(s => s.Temperature) })
+                .OrderBy(x => x.Date)
+                .ToList();
 
 
+                List<(DateTime, int)> doorOpenTime = new List<(DateTime, int)>();
 
+                (DateTime, double) lastInsideData = (DateTime.Now, 0);
+                (DateTime, double) lastOutsideData = (DateTime.Now, 0);
+
+                foreach (var insideData in insideList)
+                {
+                    var outsideData = outsideList.Find(x => x.Date == insideData.Date);
+                    if(outsideData != null)
+                    {
+                        if (insideData.Date == lastInsideData.Item1.AddMinutes(5))
+                        {
+                            if (insideData.AvergeTemperature < lastInsideData.Item2 && outsideData.AvergeTemperature > lastOutsideData.Item2)
+                            {
+                                (DateTime, int) toAdd = (insideData.Date, 5);
+                                doorOpenTime.Add(toAdd);
+                            }
+                        }
+                        (DateTime, double) toAddInside = (insideData.Date, insideData.AvergeTemperature);
+                        (DateTime, double) toAddOutside = (outsideData.Date, outsideData.AvergeTemperature);
+                        lastInsideData = toAddInside;
+                        lastOutsideData = toAddOutside;
+                    }
+                }
+
+
+                var query = doorOpenTime
+                    .GroupBy(l => l.Item1.Date)
+
+                    .Select(cl => new
+                    {
+                        Date = cl.Key,
+                        TimeOpen = cl.Sum(c => c.Item2)
+                    }).ToList().OrderByDescending(x => x.TimeOpen);
+
+                foreach (var thing in query)
+                {
+                    Console.WriteLine(thing);
+                }
+            }
+
+        }
+
+        static void TopDifference()
+        {
+            using (var context = new EFContext())
+            {
+                //Create InsideList
+                var insideList = context.Inside
+                    .AsEnumerable().GroupBy(x =>
+                    {
+                        var stamp = x.Date;
+                        stamp = stamp.AddMinutes(-(stamp.Minute % 5));
+                        stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
+                        return stamp;
+                    })
+                    .Select(g => new { Date = g.Key, AvergeTemperature = g.Average(s => s.Temperature) })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                //Create OutsideList
+                var outsideList = context.Outside
+                    .AsEnumerable().GroupBy(x =>
+                    {
+                        var stamp = x.Date;
+                        stamp = stamp.AddMinutes(-(stamp.Minute % 5));
+                        stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
+                        return stamp;
+                    })
+                    .Select(g => new { Date = g.Key, AvergeTemperature = g.Average(s => s.Temperature) })
+                    .OrderBy(x => x.Date)
+                    .ToList();
+
+                List<DoorData> differnceList = new List<DoorData>();
+
+                foreach (var insideData in insideList)
+                {
+                    var outsideData = outsideList.Find(x => x.Date == insideData.Date);
+                    if (outsideData != null)
+                    {
+                        double difference = Math.Abs(insideData.AvergeTemperature - outsideData.AvergeTemperature);
+                        DoorData toAdd = new DoorData(insideData.Date, difference);
+                        differnceList.Add(toAdd);
+                        
+                    }
+                }
+
+                differnceList = differnceList.OrderBy(x => x.Temperature).ToList();
+
+                foreach(var data in differnceList)
+                {
+                    Console.WriteLine(data.Date + " " + data.Temperature);
+                }
+            }
+        }
+
+
+        static DateTime SetFiveMin(DateTime date)
+        {
+            date = date.AddMinutes(-(date.Minute % 5));
+            date = date.AddMilliseconds(-date.Millisecond - 1000 * date.Second);
+            return date;
         }
     }
 
@@ -239,4 +370,19 @@ namespace Temperature_Control
             MouldIndex = mould;
         }
     }
+
+    public class DoorData
+    {
+        public DateTime Date;
+        public double Temperature;
+
+        public DoorData(DateTime date, double temp)
+        {
+            Date = date;
+            Temperature = temp;
+        }
+    }
+
+
+
 }
