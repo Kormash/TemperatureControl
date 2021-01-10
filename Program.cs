@@ -10,8 +10,84 @@ namespace Temperature_Control
     {
         static void Main(string[] args)
         {
-            //DateTime date = new DateTime(2016,12,11);
-            TopDifference();
+            StartConsole();
+        }
+
+        static void StartConsole()
+        {
+            Console.WriteLine("Welcome to Weather Control. What would you like to do?");
+            Console.WriteLine();
+            Console.WriteLine("1: Average Temperature");
+            Console.WriteLine("2: Warmest/Coldest Day");
+            Console.WriteLine("3: Least/Most Moist Day");
+            Console.WriteLine("4: Day with Lowest/Highest Mold Risk");
+            Console.WriteLine("5: Date of Autumn");
+            Console.WriteLine("6: Date of Winter");
+            Console.WriteLine("7: Time of Door Open");
+            Console.WriteLine("8: Biggest/Smallest Difference in Temperature");
+
+            bool loop = true;
+            while (loop)
+            {
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch(Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+                switch (select)
+                {
+                    case 1:
+                        //1: Average Temperature
+                        AverageTemp();
+                        break;
+                    case 2:
+                        //2: Warmest/Coldest Day
+                        TopTemp();
+                        break;
+                    case 3:
+                        //3: Least/Most Moist Day
+                        TopMoist();
+                        break;
+                    case 4:
+                        //4: Day with Lowest/Highest Mold Risk
+                        TopChanceMold();
+                        break;
+                    case 5:
+                        //5: Date of Autumn
+                        AutumnDate();
+                        break;
+                    case 6:
+                        //6: Date of Winter
+                        WinterDate();
+                        break;
+                    case 7:
+                        //7: Time of Door Open
+                        DoorOpen();
+                        break;
+                    case 8:
+                        //8: Biggest/Smallest Difference in Temperature
+                        TopDiff();
+                        break;
+                    default:
+                        loop = true;
+                        break;  
+                }
+            }
+        }
+
+        static void LoopConsole()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Press any Key to return to main menu.");
+            Console.ReadKey();
+            Console.Clear();
+            StartConsole();
         }
 
         void CreateDatabase()
@@ -73,19 +149,86 @@ namespace Temperature_Control
             }
         }
 
+        //1: Average Temperature
+        static void AverageTemp()
+        {
+            Console.Clear();
+            DateTime date = new DateTime();
+
+            bool loop = true;
+            while (loop)
+            {
+                Console.WriteLine("What day?: (YYYY-MM-DD)");
+                DateTime userDateTime;
+                if (DateTime.TryParse(Console.ReadLine(), out userDateTime))
+                {
+                    loop = false;
+                    date = userDateTime;
+                }
+                else
+                {
+                    Console.Clear();
+                    Console.WriteLine("Not a Valid Date.");
+                }
+            }
+
+            loop = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Inside(1) or Outside(2)?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+                switch (select)
+                {
+                    case 1:
+                        //1: Inside
+                        AverageTempInside(date);
+                        break;
+                    case 2:
+                        //2: Outside
+                        AverageTempOutside(date);
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+            
+        }
+
         static void AverageTempOutside(DateTime date)
         {
             using (var context = new EFContext())
             {
-                var query = context.Outside
-                    .Where(x => x.Date.Date == date.Date)
-                    .Average(x => x.Temperature);
+                try
+                {
+                    var query = context.Outside
+                                        .Where(x => x.Date.Date == date.Date)
+                                        .Average(x => x.Temperature);
+
+                    Console.Clear();
+                    Console.WriteLine("Average Temperature Inside for " + date.Date.ToString("dd/MM/yyyy") + " is " + Math.Round(query, 1) + " degrees");
 
 
-                Console.WriteLine("Average Temperature Outside for " + date.Date + " is " + query);
-
-
-                //Possible Bias where Many Measurements in one time of day, and few in another time.
+                    //Possible Bias where Many Measurements in one time of day, and few in another time.
+                }
+                catch (Exception e)
+                {
+                    Console.Clear();
+                    Console.WriteLine("No data exsists for this date, try another.");
+                }
+                LoopConsole();
             }
         }
 
@@ -93,19 +236,102 @@ namespace Temperature_Control
         {
             using (var context = new EFContext())
             {
-                var query = context.Inside
-                    .Where(x => x.Date.Date == date.Date)
-                    .Average(x => x.Temperature);
+                try
+                {
+                    var query = context.Inside
+                                        .Where(x => x.Date.Date == date.Date)
+                                        .Average(x => x.Temperature);
+
+                    Console.Clear();
+                    Console.WriteLine("Average Temperature Inside for " + date.Date.ToString("dd/MM/yyyy") + " is " + Math.Round(query,1) + " degrees");
 
 
-                Console.WriteLine("Average Temperature Inside for " + date.Date + " is " + query);
-
-
-                //Possible Bias where Many Measurements in one time of day, and few in another time.
+                    //Possible Bias where Many Measurements in one time of day, and few in another time.
+                }
+                catch(Exception e)
+                {
+                    Console.Clear();
+                    Console.WriteLine("No data exsists for this date, try another.");
+                }
+                LoopConsole();
             }
         }
 
-        static void TopTempOutside()
+        //2: Warmest/Coldest Day
+        static void TopTemp()
+        {
+            bool loop = true;
+            bool highest = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Highest(1) or Lowest(2) Temperature?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+                
+                switch (select)
+                {
+                    case 1:
+                        //1: Highest
+                        highest = true;
+                        break;
+                    case 2:
+                        //2: Lowest
+                        highest = false;
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+
+
+            loop = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Inside(1) or Outside(2)?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch(Exception e)
+                {
+                    select = 0;
+                }
+                
+                loop = false;
+                switch (select)
+                {
+                    case 1:
+                        //1: Inside
+                        TopTempInside(highest);
+                        break;
+                    case 2:
+                        //2: Outside
+                        TopTempOutside(highest);
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+        }
+
+        static void TopTempOutside(bool highest)
         {
             using (var context = new EFContext())
             {
@@ -118,16 +344,21 @@ namespace Temperature_Control
                         AverageTemp = cl.Average(c => c.Temperature)
                     }).ToList().OrderByDescending(x => x.AverageTemp);
 
-                foreach (var day in query)
+                var list = query.Take(10);
+                if (!highest)
                 {
-                    Console.WriteLine(day);
+                    list = query.OrderBy(x => x.AverageTemp).Take(10);
                 }
-
-
+                Console.Clear();
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": " + Math.Round(day.AverageTemp,1) + " Degrees");
+                }
+                LoopConsole();
             }
         }
 
-        static void TopTempInside()
+        static void TopTempInside(bool highest)
         {
             using (var context = new EFContext())
             {
@@ -140,18 +371,284 @@ namespace Temperature_Control
                         AverageTemp = cl.Average(c => c.Temperature)
                     }).ToList().OrderByDescending(x => x.AverageTemp);
 
-                foreach (var day in query)
+                var list = query.Take(10);
+                if (!highest)
                 {
-                    Console.WriteLine(day);
+                    list = query.OrderBy(x => x.AverageTemp).Take(10);
                 }
-
-
+                Console.Clear();
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": " + Math.Round(day.AverageTemp, 1) + " Degrees");
+                }
+                LoopConsole();
             }
         }
 
+        //3: Least/Most Moist Day
+        static void TopMoist()
+        {
+            bool loop = true;
+            bool highest = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Highest(1) or Lowest(2) Moisture?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+
+                switch (select)
+                {
+                    case 1:
+                        //1: Highest
+                        highest = true;
+                        break;
+                    case 2:
+                        //2: Lowest
+                        highest = false;
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+
+
+            loop = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Inside(1) or Outside(2)?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+                switch (select)
+                {
+                    case 1:
+                        //1: Inside
+                        TopMoistInside(highest);
+                        break;
+                    case 2:
+                        //2: Outside
+                        TopMoistOutside(highest);
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+        }
+
+        static void TopMoistInside(bool highest)
+        {
+            using (var context = new EFContext())
+            {
+                var query = context.Inside
+                    .GroupBy(l => l.Date.Date)
+
+                    .Select(cl => new
+                    {
+                        Date = cl.Key,
+                        AverageMoist = cl.Average(c => c.Moisture)
+                    }).ToList().OrderByDescending(x => x.AverageMoist);
+
+                var list = query.Take(10);
+                if (!highest)
+                {
+                    list = query.OrderBy(x => x.AverageMoist).Take(10);
+                }
+                Console.Clear();
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": " + Math.Round(day.AverageMoist, 1) + "%");
+                }
+                LoopConsole();
+            }
+        }
+
+        static void TopMoistOutside(bool highest)
+        {
+            using (var context = new EFContext())
+            {
+                var query = context.Outside
+                    .GroupBy(l => l.Date.Date)
+
+                    .Select(cl => new
+                    {
+                        Date = cl.Key,
+                        AverageMoist = cl.Average(c => c.Moisture)
+                    }).ToList().OrderByDescending(x => x.AverageMoist);
+
+                var list = query.Take(10);
+                if (!highest)
+                {
+                    list = query.OrderBy(x => x.AverageMoist).Take(10);
+                }
+                Console.Clear();
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": " + Math.Round(day.AverageMoist, 1) + "%");
+                }
+                LoopConsole();
+            }
+        }
+
+        //4: Day with Lowest/Highest Mold Risk
         static void TopChanceMold()
         {
+            bool loop = true;
+            bool highest = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Highest(1) or Lowest(2) Mold Chance?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
 
+                switch (select)
+                {
+                    case 1:
+                        //1: Highest
+                        highest = true;
+                        break;
+                    case 2:
+                        //2: Lowest
+                        highest = false;
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+
+
+            loop = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Inside(1) or Outside(2)?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+                switch (select)
+                {
+                    case 1:
+                        //1: Inside
+                        TopChanceMoldInside(highest);
+                        break;
+                    case 2:
+                        //2: Outside
+                        TopChanceMoldOutside(highest);
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+        }
+
+        static void TopChanceMoldInside(bool highest)
+        {
+            Console.Clear();
+            List<MouldData> MouldRiskList = new List<MouldData>();
+
+            using (var context = new EFContext())
+            {
+                var query = context.Inside
+                    .GroupBy(l => l.Date.Date)
+
+                    .Select(cl => new
+                    {
+                        Date = cl.Key,
+                        AverageTemp = cl.Average(c => c.Temperature),
+                        AverageMold = cl.Average(c => c.Moisture),
+                    }).ToList();
+
+
+                foreach (var day in query)
+                {
+                    double RHCrit = 80;
+                    double MouldIndex;
+                    double Temperature = day.AverageTemp;
+                    double RH = day.AverageMold;
+
+                    if (Temperature <= 20)
+                    {
+                        RHCrit = -0.00267 * Math.Pow(Temperature, 3) + 0.160 * Math.Pow(Temperature, 2) - 3.13 * Temperature + 100;
+                    }
+
+                    if (Temperature <= 0 || Temperature >= 50)
+                    {
+                        MouldIndex = 0;
+                    }
+                    else
+                    {
+                        MouldIndex = 1 + 7 * ((RHCrit - RH) / (RHCrit - 100)) - 2 * Math.Pow(((RHCrit - RH) / (RHCrit - 100)), 2);
+                        if (MouldIndex < 0)
+                        {
+                            MouldIndex = 0;
+                        }
+                    }
+
+                    MouldData mouldData = new MouldData(day.Date, day.AverageTemp, day.AverageMold, MouldIndex);
+                    MouldRiskList.Add(mouldData);
+                }
+
+                var list = MouldRiskList.OrderByDescending(m => m.MouldIndex).Take(10);
+                if (!highest)
+                {
+                    list = MouldRiskList.OrderBy(m => m.MouldIndex).Take(10);
+                }
+
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": Mold risk: " + Math.Round(day.MouldIndex, 2) + " Temperature: " + Math.Round(day.AverageTemperature,1) + " degrees. Moisture: " + Math.Round(day.AverageMoisture,1) + "%");
+                }
+            }
+            LoopConsole();
+        }
+
+        static void TopChanceMoldOutside(bool highest)
+        {
+            Console.Clear();
             List<MouldData> MouldRiskList = new List<MouldData>();
 
             using (var context = new EFContext())
@@ -186,7 +683,7 @@ namespace Temperature_Control
                     else
                     {
                         MouldIndex = 1 + 7 * ((RHCrit - RH) / (RHCrit - 100)) - 2 * Math.Pow(((RHCrit - RH) / (RHCrit - 100)), 2);
-                        if(MouldIndex < 0)
+                        if (MouldIndex < 0)
                         {
                             MouldIndex = 0;
                         }
@@ -196,16 +693,150 @@ namespace Temperature_Control
                     MouldRiskList.Add(mouldData);
                 }
 
-                var q2 = MouldRiskList.OrderByDescending(m => m.MouldIndex).Take(10);
-
-                foreach(var day in q2)
+                var list = MouldRiskList.OrderByDescending(m => m.MouldIndex).Take(10);
+                if (!highest)
                 {
-                    Console.WriteLine(day.Date + " " + day.MouldIndex + " " + day.AverageTemperature + " " + day.AverageMoisture);
+                    list = MouldRiskList.OrderBy(m => m.MouldIndex).Take(10);
+                }
+
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": Mold risk: " + Math.Round(day.MouldIndex,2) + " Temperature: " + Math.Round(day.AverageTemperature, 1) + " degrees. Moisture: " + Math.Round(day.AverageMoisture, 1) + "%");
                 }
             }
+            LoopConsole();
         }
 
-        static void TopDoorOpen()
+        //5: Date of Autumn
+        static void AutumnDate()
+        {
+            // Meteorological Autumn occurs when the average temperature of a given day is 10C or lower.
+            Console.Clear();
+
+            using (var context = new EFContext())
+            {
+                var query = context.Outside
+                    .GroupBy(l => l.Date.Date)
+                    .Select(cl => new { Date = cl.Key, AverageTemp = cl.Average(c => c.Temperature) })
+                    .ToList()
+                    .OrderBy(x => x.Date);
+
+
+                int counter = 0;
+                DateTime date = DateTime.Now;
+                foreach (var day in query)
+                {
+                    if (day.AverageTemp <= 10)
+                    {
+                        if (counter == 0)
+                        {
+                            date = day.Date;
+                        }
+                        counter++;
+                    }
+                    else
+                    {
+                        counter = 0;
+                    }
+
+                    if (counter == 5)
+                    {
+                        Console.WriteLine($"Meteorological Autumn start: {date.ToString("dd/MM/yyy")}");
+                        break;
+                    }
+
+                }
+                
+            }
+            LoopConsole();
+        }
+
+        //6: Date of Winter
+        static void WinterDate()
+        {
+            // Meteorological Autumn occurs when the average temperature of a given day is 0C or lower.
+            Console.Clear();
+
+            using (var context = new EFContext())
+            {
+                var query = context.Outside
+                    .GroupBy(l => l.Date.Date)
+                    .Select(cl => new { Date = cl.Key, AverageTemp = cl.Average(c => c.Temperature) })
+                    .ToList()
+                    .OrderBy(x => x.Date);
+
+
+                int counter = 0;
+                DateTime date = DateTime.Now;
+                foreach (var day in query)
+                {
+                    var AverageTemp = (int)day.AverageTemp; //Cast to int to get a result, otherwise 2016 never below averagetemp 0 five days in a row. == No Meteorological Winter.
+                    if (AverageTemp <= 0)
+                    {
+                        if (counter == 0)
+                        {
+                            date = day.Date;
+                        }
+                        counter++;
+                    }
+                    else
+                    {
+                        counter = 0;
+                    }
+
+                    if (counter == 5)
+                    {
+                        Console.WriteLine($"Meteorological winter start: {date.ToString("dd/MM/yyy")}");
+                        break;
+                    }
+
+                }
+            }
+            LoopConsole();
+        }
+
+        //7: Time of Door Open
+        static void DoorOpen()
+        {
+            bool loop = true;
+            bool highest = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Most(1) or Least(2) Time Open?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+
+                switch (select)
+                {
+                    case 1:
+                        //1: Most
+                        highest = true;
+                        break;
+                    case 2:
+                        //2: Least
+                        highest = false;
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+            Console.Clear();
+            TopDoorOpen(highest);
+        }
+
+        static void TopDoorOpen(bool highest)
         {
             using (var context = new EFContext())
             {
@@ -272,15 +903,63 @@ namespace Temperature_Control
                         TimeOpen = cl.Sum(c => c.Item2)
                     }).ToList().OrderByDescending(x => x.TimeOpen);
 
-                foreach (var thing in query)
+                var list = query.Take(10);
+                if (!highest)
                 {
-                    Console.WriteLine(thing);
+                    list = query.OrderBy(x => x.TimeOpen).Take(10);
+                }
+
+                foreach (var day in list)
+                {
+                    Console.WriteLine(day.Date.ToString("dd/MM/yyyy") + ": " + day.TimeOpen + "Minutes");
                 }
             }
+            LoopConsole();
 
         }
 
-        static void TopDifference()
+        //8: Biggest/Smallest Difference in Temperature
+        static void TopDiff()
+        {
+            bool loop = true;
+            bool highest = true;
+            while (loop)
+            {
+                Console.Clear();
+                Console.WriteLine("Most(1) or Least(2) Temperature Differance?");
+                var input = Console.ReadKey();
+                int select;
+                try
+                {
+                    select = int.Parse(input.KeyChar.ToString());
+                }
+                catch (Exception e)
+                {
+                    select = 0;
+                }
+                loop = false;
+
+                switch (select)
+                {
+                    case 1:
+                        //1: Most
+                        highest = true;
+                        break;
+                    case 2:
+                        //2: Least
+                        highest = false;
+                        break;
+                    default:
+                        loop = true;
+                        break;
+
+                }
+            }
+            Console.Clear();
+            TopDifference(highest);
+        }
+
+        static void TopDifference(bool highest)
         {
             using (var context = new EFContext())
             {
@@ -324,21 +1003,18 @@ namespace Temperature_Control
                     }
                 }
 
-                differnceList = differnceList.OrderBy(x => x.Temperature).ToList();
-
-                foreach(var data in differnceList)
+                var list = differnceList.OrderBy(x => x.Temperature).Take(10).ToList();
+                if (highest)
                 {
-                    Console.WriteLine(data.Date + " " + data.Temperature);
+                    list = differnceList.OrderByDescending(x => x.Temperature).Take(10).ToList();
+                }
+
+                foreach(var data in list)
+                {
+                    Console.WriteLine(data.Date + " " +Math.Round(data.Temperature,1));
                 }
             }
-        }
-
-
-        static DateTime SetFiveMin(DateTime date)
-        {
-            date = date.AddMinutes(-(date.Minute % 5));
-            date = date.AddMilliseconds(-date.Millisecond - 1000 * date.Second);
-            return date;
+            LoopConsole();
         }
     }
 
